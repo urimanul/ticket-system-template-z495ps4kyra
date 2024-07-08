@@ -91,9 +91,9 @@ if submitted:
         ]
     )
 
-    ticketNo = f"TICKET-{recent_ticket_number+1}"
-    sql = "INSERT INTO support_ticket (ID,Issue,Status,Priority,Date_Submitted) values (ticketNo, issue,'オープン',priority,today);"
-    st.write(sql)
+    #ticketNo = f"TICKET-{recent_ticket_number+1}"
+    #sql = "INSERT INTO support_ticket (ID,Issue,Status,Priority,Date_Submitted) values (ticketNo, issue,'オープン',priority,today);"
+    #st.write(sql)
     #sql = "INSERT INTO todo_tasks (Task_Subject) VALUES('xyzss')"
     #cur.execute(sql)
 
