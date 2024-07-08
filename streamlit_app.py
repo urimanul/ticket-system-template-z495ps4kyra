@@ -46,7 +46,7 @@ for fetched_line in cur.fetchall():
     data1['Issue'].append(fetched_line['Issue'])
     data1['Status'].append(fetched_line['Status'])
     data1['Priority'].append(fetched_line['Priority'])
-    data1['Date Submitted'].append(fetched_line['Date Submitted'])
+    data1['Date Submitted'].append(fetched_line['Date_Submitted'])
 
 cur.close()
 
