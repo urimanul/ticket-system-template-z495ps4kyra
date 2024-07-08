@@ -91,7 +91,8 @@ if submitted:
         ]
     )
 
-    sql = "INSERT INTO support_ticket (ID,Issue,Status,Priority,`Date Submitted`) values (f"TICKET-{recent_ticket_number+1}", issue,'オープン',priority,today);"
+    ticketNo = f"TICKET-{recent_ticket_number+1}"
+    sql = "INSERT INTO support_ticket (ID,Issue,Status,Priority,`Date Submitted`) values (ticketNo, issue,'オープン',priority,today);"
     #sql = "INSERT INTO todo_tasks (Task_Subject) VALUES('xyzss')"
     cur.execute(sql)
 
