@@ -1,5 +1,6 @@
 import datetime
 import random
+import mysql.connector
 
 import altair as alt
 import numpy as np
@@ -16,54 +17,51 @@ st.write(
     """
 )
 
+# DBへ接続
+conn = mysql.connector.connect(
+    user='smairuser',
+    password='smairuser',
+    host='www.ryhintl.com',
+    database='smair',
+    port=36000
+)
+
+# DBの接続確認
+if not conn.is_connected():
+    raise Exception("MySQLサーバへの接続に失敗しました")
+
+cur = conn.cursor(dictionary=True)  # 取得結果を辞書型で扱う設定
+#cur = conn.cursor()
+
+query__for_fetching = """
+SELECT * FROM support_ticket;
+"""
+
+cur.execute(query__for_fetching)
+
+data1 = {'ID':[],'Issue':[],'Status':[],'Priority':[],'Date Submitted':[]}
+for fetched_line in cur.fetchall():
+    data1['ID'].append(f"TICKET-"+str(fetched_line['ID']))
+    data1['Issue'].append(fetched_line['Issue'])
+    data1['Status'].append(fetched_line['Status'])
+    data1['Priority'].append(fetched_line['Priority'])
+    data1['Date Submitted'].append(fetched_line['Date Submitted'])
+
+cur.close()
+
 # Create a random Pandas dataframe with existing tickets.
 if "df" not in st.session_state:
 
     # Set seed for reproducibility.
     np.random.seed(42)
 
-    # Make up some fake issue descriptions.
-    issue_descriptions = [
-        "Network connectivity issues in the office",
-        "Software application crashing on startup",
-        "Printer not responding to print commands",
-        "Email server downtime",
-        "Data backup failure",
-        "Login authentication problems",
-        "Website performance degradation",
-        "Security vulnerability identified",
-        "Hardware malfunction in the server room",
-        "Employee unable to access shared files",
-        "Database connection failure",
-        "Mobile application not syncing data",
-        "VoIP phone system issues",
-        "VPN connection problems for remote employees",
-        "System updates causing compatibility issues",
-        "File server running out of storage space",
-        "Intrusion detection system alerts",
-        "Inventory management system errors",
-        "Customer data not loading in CRM",
-        "Collaboration tool not sending notifications",
-    ]
-
-    # Generate the dataframe with 100 rows/tickets.
-    data = {
-        "ID": [f"TICKET-{i}" for i in range(1100, 1000, -1)],
-        "Issue": np.random.choice(issue_descriptions, size=100),
-        "Status": np.random.choice(["Open", "In Progress", "Closed"], size=100),
-        "Priority": np.random.choice(["High", "Medium", "Low"], size=100),
-        "Date Submitted": [
-            datetime.date(2023, 6, 1) + datetime.timedelta(days=random.randint(0, 182))
-            for _ in range(100)
-        ],
-    }
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(data1)
 
     # Save the dataframe in session state (a dictionary-like object that persists across
     # page runs). This ensures our data is persisted when the app updates.
     st.session_state.df = df
 
-
+#st.write(issue_descriptions)
 # Show a section to add a new ticket.
 st.header("チケット追加")
 
@@ -71,28 +69,35 @@ st.header("チケット追加")
 # in a form, the app will only rerun once the submit button is pressed.
 with st.form("add_ticket_form"):
     issue = st.text_area("イッシュを説明")
-    priority = st.selectbox("Priority", ["High", "Medium", "Low"])
+    priority = st.selectbox("優先度", ["高", "中", "低"])
     submitted = st.form_submit_button("提出")
 
 if submitted:
     # Make a dataframe for the new ticket and append it to the dataframe in session
     # state.
-    recent_ticket_number = int(max(st.session_state.df.ID).split("-")[1])
-    today = datetime.datetime.now().strftime("%m-%d-%Y")
+
+    recent_ticket_number = len(st.session_state.df)+1
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
     df_new = pd.DataFrame(
         [
             {
                 "ID": f"TICKET-{recent_ticket_number+1}",
                 "Issue": issue,
-                "Status": "Open",
+                "Status": "オープン",
                 "Priority": priority,
                 "Date Submitted": today,
             }
         ]
     )
 
+    #sql = "INSERT INTO todo_tasks (Task_ID,Task_Assigned_Employee_ID,Task_Subject,Task_Start_Date,Task_Due_Date,Task_Status,Task_Priority,Task_Completion,Task_Parent_ID) VALUES('xyzss')"
+    #sql = "INSERT INTO todo_tasks (Task_Subject) VALUES('xyzss')"
+    #cur.execute(sql)
+
+    #conn.commit()
+
     # Show a little success message.
-    st.write("チケットが提出されました。Ticket submitted! Here are the ticket details:")
+    st.write("チケットが提出されました。")
     st.dataframe(df_new, use_container_width=True, hide_index=True)
     st.session_state.df = pd.concat([df_new, st.session_state.df], axis=0)
 
@@ -115,13 +120,13 @@ edited_df = st.data_editor(
         "Status": st.column_config.SelectboxColumn(
             "Status",
             help="Ticket status",
-            options=["Open", "In Progress", "Closed"],
+            options=["オープン", "処理中", "クローズ"],
             required=True,
         ),
         "Priority": st.column_config.SelectboxColumn(
             "Priority",
             help="Priority",
-            options=["High", "Medium", "Low"],
+            options=["高", "中", "低"],
             required=True,
         ),
     },
@@ -130,11 +135,11 @@ edited_df = st.data_editor(
 )
 
 # Show some metrics and charts about the ticket.
-st.header("Statistics")
+st.header("統計")
 
 # Show metrics side by side using `st.columns` and `st.metric`.
 col1, col2, col3 = st.columns(3)
-num_open_tickets = len(st.session_state.df[st.session_state.df.Status == "Open"])
+num_open_tickets = len(st.session_state.df[st.session_state.df.Status == "処理中"])
 col1.metric(label="オープンチケット数", value=num_open_tickets, delta=10)
 col2.metric(label="レスポンスタイム（時間）", value=5.2, delta=-1.5)
 col3.metric(label="平均時間", value=16, delta=2)
@@ -157,7 +162,7 @@ status_plot = (
 )
 st.altair_chart(status_plot, use_container_width=True, theme="streamlit")
 
-st.write("##### Current ticket priorities")
+st.write("##### 優先度")
 priority_plot = (
     alt.Chart(edited_df)
     .mark_arc()
