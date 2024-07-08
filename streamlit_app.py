@@ -91,11 +91,11 @@ if submitted:
         ]
     )
 
-    #sql = "INSERT INTO todo_tasks (Task_ID,Task_Assigned_Employee_ID,Task_Subject,Task_Start_Date,Task_Due_Date,Task_Status,Task_Priority,Task_Completion,Task_Parent_ID) VALUES('xyzss')"
+    sql = "INSERT INTO support_ticket (ID,Issue,Status,Priority,`Date Submitted`) values (f"TICKET-{recent_ticket_number+1}", issue,'オープン',priority,today);"
     #sql = "INSERT INTO todo_tasks (Task_Subject) VALUES('xyzss')"
-    #cur.execute(sql)
+    cur.execute(sql)
 
-    #conn.commit()
+    conn.commit()
 
     # Show a little success message.
     st.write("チケットが提出されました。")
